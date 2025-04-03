@@ -14,6 +14,8 @@ The primary goal is to create an intelligent agent capable of analyzing project 
 4. **Handle Uncertainty:** Implement a mechanism for requesting human review when the agent's confidence is below a threshold.
 5. **Calculate PDL:** Compute a final Project Definition Level (PDL) score based on the weighted results of the checklist evaluation.
 
+![agent graph](resources/agent_graph.svg)
+
 ## Architecture Overview
 
 We're building a robust, modular system leveraging Python and the LangGraph framework:

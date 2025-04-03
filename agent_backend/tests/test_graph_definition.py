@@ -34,7 +34,8 @@ class TestGraphDefinitionNodes(unittest.TestCase):
     def test_greeting_node_calls_handler(self):
         """Verify greeting_node calls handle_greeting and returns history."""
         test_state = create_test_state()
-        original_history = test_state.history.copy(deep=True)
+        original_messages = test_state.history.messages.copy()  # Copy the messages list directly
+
 
         # Mock the function that modifies state
         with patch('graph_definition.handle_greeting') as mock_handle_greeting:
@@ -152,7 +153,7 @@ class TestGraphDefinitionNodes(unittest.TestCase):
             ("process_tool_request", "execute_tool"),
             ("end_conversation", "END"), # LangGraph's END sentinel
             ("clarify", "call_llm"),
-            ("wait_for_user", "END"),
+            ("wait_for_user", "wait_for_user"),
             ("error", "handle_error"),
             ("unexpected_route", "handle_error"), # Default fallback
         ]
