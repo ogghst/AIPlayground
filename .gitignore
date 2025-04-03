@@ -9,3 +9,4 @@ __pycache__/
 .env
 _build/
 
+__pycache__
