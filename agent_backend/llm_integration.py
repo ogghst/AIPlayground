@@ -279,7 +279,7 @@ class LLMIntegrator:
 
 # --- Example Usage (Illustrative) ---
 
-async def main(provider_type: str = "openai"):
+async def main(provider_type: str = "ollama"):
     # Choose provider based on argument
     provider: Optional[LLMProvider] = None
     if provider_type == "openai":
@@ -295,15 +295,15 @@ async def main(provider_type: str = "openai"):
             return
     elif provider_type == "ollama":
         try:
-            # Assumes default host and llama3 model pulled
-            provider = OllamaProvider(model="llama3")
+            # Assumes default host and qwq model pulled
+            provider = OllamaProvider(model="qwq")
             # Test connection quickly (optional)
             # await provider.client.ps() # Example check
         except (ImportError, ValueError, ConnectionError) as e:
             logging.error(f"Failed to initialize Ollama provider: {e}")
             print(f"\n--- Skipping Ollama Example ---")
             print(f"Failed to initialize Ollama provider: {e}")
-            print("Ensure Ollama is installed (`pip install ollama`), running, and the model 'llama3' is pulled.")
+            print("Ensure Ollama is installed (`pip install ollama`), running, and the model 'wqw' is pulled.")
             print("----------------------------\n")
             return
         except Exception as e: # Catch other potential init errors

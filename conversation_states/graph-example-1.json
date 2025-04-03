@@ -1,0 +1,40 @@
+{
+  "conversation_id": "graph-example-1",
+  "history": {
+    "messages": [
+      {
+        "sender": "example-user-123",
+        "content": "Hello",
+        "timestamp": "2025-04-03T13:41:51.320429",
+        "metadata": {}
+      },
+      {
+        "sender": "example-user-123",
+        "content": "Hello",
+        "timestamp": "2025-04-03T13:45:45.748424",
+        "metadata": {}
+      },
+      {
+        "sender": "example-user-123",
+        "content": "Hello",
+        "timestamp": "2025-04-03T13:54:52.529744",
+        "metadata": {}
+      }
+    ]
+  },
+  "user_info": {
+    "user_id": "example-user-123",
+    "name": "Graph Tester",
+    "preferences": {}
+  },
+  "memory": {
+    "short_term": {},
+    "vector_store_context_id": null,
+    "extracted_entities": [],
+    "conversation_summary": null
+  },
+  "current_node": null,
+  "intermediate_results": {},
+  "error_info": null,
+  "requires_human_intervention": false
+}

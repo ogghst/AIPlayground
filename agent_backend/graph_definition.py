@@ -14,7 +14,7 @@ except ImportError:
 
 # Core module imports
 from state_management import ConversationState, UserInfo, StateManager
-from llm_integration import LLMIntegrator, OpenAIProvider, LLMProvider, OllamaProvider
+from llm_integration import LLMIntegrator, OpenAIProvider, OllamaProvider
 from processing import (
     route_message,
     handle_greeting,
@@ -34,16 +34,16 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 if not os.getenv("OPENAI_API_KEY"):
     #logging.warning("OPENAI_API_KEY not set. LLM functionality will fail.")
     try:
-        llm_provider = OllamaProvider(model="qwq")
+        llm_provider = OpenAIProvider(model="gpt-4o")
         llm_integrator = LLMIntegrator(provider=llm_provider)
     except Exception as e:
-         logging.error(f"Failed to initialize OpenAI provider: {e}", exc_info=True)
+         logging.error(f"Failed to initialize Ollama provider: {e}", exc_info=True)
          llm_provider = None
          llm_integrator = None
 
 else:
     try:
-        llm_provider = OpenAIProvider(model="gpt-4o")
+        llm_provider = OllamaProvider(model="qwq")
         llm_integrator = LLMIntegrator(provider=llm_provider)
     except Exception as e:
          logging.error(f"Failed to initialize OpenAI provider: {e}", exc_info=True)
@@ -117,6 +117,41 @@ async def error_node(state: ConversationState) -> Dict[str, Any]:
     return {"history": state.history, "error_info": state.error_info}
 
 
+# --- Router Functions (Moved to Module Level) ---
+
+def entry_router(state: ConversationState) -> Literal["greet", "call_llm", "execute_tool", "end_conversation", "error"]:
+    """Determines the initial routing based on the current state."""
+    # If there's an error flag set, immediately go to error handling
+    if state.error_info:
+        logging.warning("Error flag set, routing to handle_error.")
+        return "error"
+
+    # Use the processing module's router
+    decision = route_message(state)
+
+    # Map router decisions to graph node names or special outcomes
+    # Note: END is handled by the conditional edge mapping, return the decision string
+    route_map = {
+        "greet": "greet",
+        "generate_response": "call_llm",
+        "process_tool_request": "execute_tool",
+        "end_conversation": "end_conversation", # Return the decision string
+        "clarify": "call_llm",
+        "wait_for_user": "wait_for_user",     # Return the decision string
+        "error": "handle_error"
+    }
+    graph_destination = route_map.get(decision, "handle_error") # Default to error
+    logging.info(f"Entry router decision: '{decision}' -> Routing to graph node/state: '{graph_destination}'")
+    return graph_destination
+
+def agent_router_node(state: ConversationState) -> Literal["greet", "call_llm", "execute_tool", "end_conversation", "wait_for_user", "error"]:
+    """This node's *only* job is to route. It calls entry_router.
+       It directly returns the decision for conditional edges.
+    """
+    # The return type hint needs to include all possible string outputs from entry_router
+    return entry_router(state)
+
+
 # --- Graph Definition ---
 
 def create_chatbot_graph() -> StateGraph:
@@ -134,56 +169,28 @@ def create_chatbot_graph() -> StateGraph:
     graph.add_node("execute_tool", execute_tool_node)
     graph.add_node("prepare_response", prepare_response_node)
     graph.add_node("handle_error", error_node)
+    # Use the module-level router node function
+    graph.add_node("agent", agent_router_node)
 
     # --- Define Edges ---
 
-    # Conditional Entry Point: Route based on the first relevant message
-    # The router function needs the *current* state to make decisions.
-    def entry_router(state: ConversationState) -> Literal["greet", "call_llm", "execute_tool", "end_conversation", "error"]:
-        # If there's an error flag set, immediately go to error handling
-        if state.error_info:
-            logging.warning("Error flag set, routing to handle_error.")
-            return "error"
-
-        # Use the processing module's router
-        decision = route_message(state)
-
-        # Map router decisions to graph nodes or END
-        route_map = {
-            "greet": "greet",
-            "generate_response": "call_llm",
-            "process_tool_request": "execute_tool",
-            "end_conversation": END, # Map "end_conversation" to the graph's END state
-            "clarify": "call_llm", # Example: If clarification needed, ask LLM to generate question
-            "wait_for_user": END, # If waiting for user, graph run ends until next input
-            "error": "handle_error"
-        }
-        graph_destination = route_map.get(decision, "handle_error") # Default to error if unexpected route
-        logging.info(f"Entry router decision: '{decision}' -> Routing to graph node/state: '{graph_destination}'")
-        return graph_destination
-
-    # Re-thinking entry: Add an 'agent' node that just calls the router.
-    def agent_router_node(state: ConversationState) -> Literal["greet", "call_llm", "execute_tool", "end_conversation", "error"]:
-         # This node's *only* job is to route.
-         # It directly returns the decision for conditional edges.
-         return entry_router(state)
-
-    graph.add_node("agent", agent_router_node)
+    # Set entry point to the agent router
     graph.set_entry_point("agent")
 
-    # Edges from the agent router node based on its return value
+    # Conditional Edges from the agent router node based on its return value
+    # The path function now directly uses the output of agent_router_node
     graph.add_conditional_edges(
-        start_node="agent",
-        path=lambda x: x, # The node itself returns the destination name
+        source="agent",
+        path=lambda state: entry_router(state), # Call the router directly here
         path_map={
             "greet": "greet",
             "call_llm": "call_llm",
             "execute_tool": "execute_tool",
             "handle_error": "handle_error",
-            END: END
+            "end_conversation": END, # Map the specific decision string to END
+            "wait_for_user": END      # Map the specific decision string to END
         }
     )
-
 
     # --- Other Edges ---
     # After greeting, usually let the LLM respond to the user's initial query that triggered greet
