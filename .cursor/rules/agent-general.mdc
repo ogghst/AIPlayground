@@ -1,0 +1,87 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+This outlines the structure and flow for an AI agent designed to assess project definition level by scanning documents against a checklist.
+
+**1\. Graph State:**
+
+The graph operates on a shared state object that evolves as the process progresses. Key elements of the state include:
+
+* documents: A list of document objects, each containing its path/content, type (Word, Excel, PDF), and utilization context.  
+* checks: A list of check objects, each with a name, description, and weight.  
+* indexed\_docs: A reference to the indexed/vectorized representation of the documents.  
+* current\_check\_index: The index of the check currently being processed.  
+* results: A list to store the outcome for each check (result: Yes/No/NA, reason, evidence, confidence\_score, requires\_human\_review).  
+* final\_pdl: The calculated Project Definition Level score.  
+* human\_feedback\_needed: Boolean flag indicating if human input is required for a specific check.  
+* feedback\_data: Data structure to hold information for the human reviewer.
+
+**2\. Nodes:**
+
+* **start\_processing** (Entry Point):  
+  * Receives the initial list of documents and checks.  
+  * Initializes the state.  
+  * *Transitions to:* index\_documents.  
+* **index\_documents**:  
+  * **Action:** Parses documents based on their type (using libraries like python-docx, openpyxl, pypdf). Chunks the text. Generates embeddings (e.g., using Sentence Transformers or OpenAI embeddings). Stores chunks and embeddings in a vector store (e.g., FAISS, ChromaDB).  
+  * Updates state\['indexed\_docs'\].  
+  * *Transitions to:* select\_next\_check.  
+* **select\_next\_check**:  
+  * **Action:** Increments current\_check\_index. If all checks are processed, transitions to calculate\_pdl. Otherwise, prepares the current check data.  
+  * *Conditional Edge:* Based on whether all checks are done.  
+  * *Transitions to:* retrieve\_relevant\_info (if more checks) or calculate\_pdl (if done).  
+* **retrieve\_relevant\_info**:  
+  * **Action:** Takes the current check's description. Queries the indexed\_docs (vector store) to find the most relevant document chunks related to the check.  
+  * Adds retrieved chunks to a temporary state variable for the current check.  
+  * *Transitions to:* evaluate\_check\_compliance.  
+* **evaluate\_check\_compliance**:  
+  * **Action:** Uses an LLM (like GPT-4, Claude, or Gemini) with a specific prompt. The prompt includes the check's description, the retrieved document chunks, and instructions to:  
+    1. Determine if the check is met (Yes/No/Not Applicable).  
+    2. Provide a concise reason for the determination.  
+    3. Extract specific evidence (quotes or summaries) from the chunks.  
+    4. Assign a confidence\_score (e.g., 0-1) for the determination.  
+  * Stores the LLM's output temporarily.  
+  * *Transitions to:* assess\_confidence.  
+* **assess\_confidence**:  
+  * **Action:** Compares the confidence\_score from the previous step against a predefined threshold.  
+  * Sets state\['human\_feedback\_needed'\] accordingly.  
+  * *Conditional Edge:* Based on confidence\_score vs threshold.  
+  * *Transitions to:* request\_human\_feedback (if below threshold) or store\_result (if above or equal).  
+* **request\_human\_feedback**:  
+  * **Action:** Formats the check details, the agent's proposed result (Yes/No/NA, reason, evidence), and the confidence score. Stores this in state\['feedback\_data'\]. *This node essentially pauses the graph or signals an external system that human input is required.* LangGraph's interrupt\_after can be used here.  
+  * *Transitions to:* human\_in\_the\_loop (or waits for external trigger).  
+* **human\_in\_the\_loop**:  
+  * **Action:** (Represents the point where human feedback is received). Updates the result based on the human's input (confirmation or correction of Yes/No/NA, reason, evidence). Resets state\['human\_feedback\_needed'\] to False.  
+  * *Transitions to:* store\_result.  
+* **store\_result**:  
+  * **Action:** Appends the final (agent-determined or human-verified) result for the current check (result, reason, evidence, weight) to the state\['results'\] list.  
+  * *Transitions to:* select\_next\_check (to loop back for the next check).  
+* **calculate\_pdl**:  
+  * **Action:** Iterates through the state\['results'\]. Calculates:  
+    * weighted\_yes\_sum \= sum(check\['weight'\] for check in results if check\['result'\] \== 'Yes')  
+    * weighted\_yes\_no\_sum \= sum(check\['weight'\] for check in results if check\['result'\] in \['Yes', 'No'\])  
+    * pdl \= weighted\_yes\_sum / weighted\_yes\_no\_sum (handle division by zero if needed).  
+  * Updates state\['final\_pdl'\].  
+  * *Transitions to:* end\_processing.  
+* **end\_processing** (End Point):  
+  * Represents the final state of the graph.  
+  * Contains the complete results list and the final\_pdl.
+
+**3\. Edges:**
+
+* START \-\> index\_documents  
+* index\_documents \-\> select\_next\_check  
+* select\_next\_check \-\> retrieve\_relevant\_info (Conditional: If more checks exist)  
+* select\_next\_check \-\> calculate\_pdl (Conditional: If all checks processed)  
+* retrieve\_relevant\_info \-\> evaluate\_check\_compliance  
+* evaluate\_check\_compliance \-\> assess\_confidence  
+* assess\_confidence \-\> request\_human\_feedback (Conditional: If confidence \< threshold)  
+* assess\_confidence \-\> store\_result (Conditional: If confidence \>= threshold)  
+* request\_human\_feedback \-\> human\_in\_the\_loop (Represents waiting for/receiving human input)  
+* human\_in\_the\_loop \-\> store\_result  
+* store\_result \-\> select\_next\_check  
+* calculate\_pdl \-\> END
+
+This graph structure provides a robust framework for your AI agent, incorporating document processing, iterative checking, LLM evaluation, confidence assessment, human-in-the-loop capabilities, and final calculation. You would implement each node as a Python function or callable class and define the edges and conditional logic using LangGraph's API.

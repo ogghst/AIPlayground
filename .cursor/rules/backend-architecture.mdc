@@ -1,0 +1,186 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Python Backend Architecture for LangGraph Chatbot
+
+This rule describes a Python backend system designed to serve as the interface layer between clients and a LangGraph-powered chatbot. The system provides both REST API endpoints and WebSocket connections to support various interaction patterns.
+
+## Core Modules
+
+### 1. Application Entry Point
+**Purpose**: Initializes and configures the entire application.
+
+**Functionalities**:
+- Sets up the Flask application
+- Configures environment variables and settings
+- Initializes database connections
+- Registers all routes and WebSocket endpoints
+- Starts the server
+
+**Technologies**:
+- Flask
+- python-dotenv (for environment configuration)
+- Gunicorn/uWSGI (for production deployment)
+
+**Relations**: Orchestrates the initialization of all other modules.
+
+### 2. Database Module
+**Purpose**: Manages data persistence layer for the application.
+
+**Functionalities**:
+- Defines database schema and models
+- Handles database migrations
+- Provides CRUD operations for conversations, users, and settings
+- Manages connection pooling and query optimization
+
+**Technologies**:
+- SQLAlchemy (ORM)
+- SQLite (primary database)
+- Alembic (for migrations)
+
+**Relations**: Used by Service Layer to persist and retrieve data.
+
+### 3. REST API Controller Module
+**Purpose**: Exposes HTTP endpoints for stateless interactions with the chatbot.
+
+**Functionalities**:
+- Provides endpoints for conversation management (create, retrieve, update)
+- Handles user authentication and authorization
+- Implements endpoints for chatbot configuration
+- Offers history and analytics endpoints
+- Manages file uploads for document processing
+
+**Technologies**:
+- Flask
+- Flask-RESTful (for structured API development)
+- Flask-CORS (for cross-origin support)
+- Marshmallow (for request/response serialization)
+
+**Relations**: Forwards requests to the Service Layer; consumes authentication services.
+
+### 4. WebSocket Server Module
+**Purpose**: Enables real-time bidirectional communication for interactive chat sessions.
+
+**Functionalities**:
+- Establishes and maintains WebSocket connections
+- Handles streaming responses from the LLM
+- Manages connection state and heartbeats
+- Provides typing indicators and read receipts
+- Supports multi-user chat rooms if needed
+
+**Technologies**:
+- Flask-SocketIO
+- eventlet or gevent (for WebSocket support)
+
+**Relations**: Communicates with the Chatbot Integration Layer; uses the Authentication Module for session validation.
+
+### 5. Authentication Module
+**Purpose**: Manages user identity and access control.
+
+**Functionalities**:
+- Handles user registration and login
+- Manages JWT token issuance and validation
+- Implements role-based access control
+- Provides session management
+- Supports OAuth integrations if needed
+
+**Technologies**:
+- Flask-JWT-Extended
+- passlib (for password hashing)
+- itsdangerous (for token signing)
+
+**Relations**: Used by both REST and WebSocket modules to validate requests; interacts with the Database Module for user data.
+
+### 6. Chatbot Integration Layer
+**Purpose**: Serves as the bridge between the backend and the LangGraph chatbot.
+
+**Functionalities**:
+- Translates API/WebSocket requests into LangGraph-compatible formats
+- Manages conversation context and state
+- Handles streaming of partial responses
+- Provides timeout and error handling for LLM calls
+- Implements rate limiting and usage tracking
+
+**Technologies**:
+- Custom adapters for LangGraph
+- asyncio (for handling concurrent operations)
+
+**Relations**: Consumes the LangGraph chatbot core; provides results to API and WebSocket modules.
+
+## Supporting Modules
+
+### 7. Logging and Monitoring Module
+**Purpose**: Tracks system performance and application behavior.
+
+**Functionalities**:
+- Configures structured logging
+- Captures performance metrics
+- Monitors resource usage
+- Implements error tracking and alerting
+- Provides request tracing
+
+**Technologies**:
+- structlog or loguru (for structured logging)
+- Prometheus client (for metrics)
+- OpenTelemetry (for distributed tracing)
+
+**Relations**: Used by all other modules; may send data to external monitoring systems.
+
+### 8. Cache Module
+**Purpose**: Improves performance through strategic data caching.
+
+**Functionalities**:
+- Caches frequent database queries
+- Stores computation-heavy results
+- Manages conversation history caching
+- Implements TTL and invalidation strategies
+
+**Technologies**:
+- Flask-Caching
+- Redis (optional, for distributed caching)
+
+**Relations**: Used by Service Layer and Chatbot Integration Layer to optimize performance.
+
+### 9. Service Layer
+**Purpose**: Implements business logic and coordinates operations across modules.
+
+**Functionalities**:
+- Orchestrates complex workflows
+- Implements business rules and validations
+- Coordinates between database and application logic
+- Manages transactions and ensures data consistency
+
+**Technologies**:
+- Custom Python modules
+
+**Relations**: Called by Controllers; uses Database, Cache, and Chatbot Integration modules.
+
+### 10. Utility Module
+**Purpose**: Provides common functionality used across the application.
+
+**Functionalities**:
+- Implements helper functions and shared utilities
+- Provides format conversions and validators
+- Manages date/time operations
+- Handles sanitization and security checks
+
+**Technologies**:
+- Standard libraries and custom functions
+
+**Relations**: Used by all other modules as needed.
+
+## Integration Flow
+
+1. Client applications connect either through REST API calls or WebSocket connections
+2. The Authentication Module validates user identity and permissions
+3. Requests are routed to the appropriate controller (REST) or handler (WebSocket)
+4. The Service Layer processes the business logic of the request
+5. The Chatbot Integration Layer communicates with the LangGraph chatbot
+6. Responses are formatted and returned via the original communication channel
+7. The Logging Module records the interaction details
+8. The Database Module persists relevant conversation data
+
+This architecture provides a robust foundation for integrating a LangGraph chatbot into a production-ready backend system with support for both synchronous HTTP requests and real-time WebSocket communication.

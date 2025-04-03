@@ -1,0 +1,119 @@
+---
+description: 
+globs: *.py
+alwaysApply: false
+---
+## When writing python code, follow those **Fundamental** Principles
+
+# Object-oriented programming in Python should follow these core principles to create robust, maintainable, and well-structured code:
+
+1. Encapsulation: Protect internal state by making attributes private or protected when appropriate. Use properties to control access to class attributes.
+
+Use double underscores (__) for truly private attributes that shouldn't be accessed directly
+Use single underscore (_) for protected attributes that indicate "internal use"
+Implement properties using @property decorator for controlled attribute access
+Create setter methods with validation logic to ensure data integrity
+
+2. Inheritance: Use inheritance thoughtfully to create hierarchies that reflect real-world relationships between concepts.
+
+Prefer composition over inheritance when possible
+Keep inheritance hierarchies shallow (avoid deep nesting)
+Use multiple inheritance carefully and understand Method Resolution Order (MRO)
+Always call super() in subclass constructors when extending parent behavior
+Implement abstract base classes for common interfaces
+
+3. Polymorphism: Design interfaces that allow different classes to be used interchangeably.
+
+Define clear interfaces for classes that serve similar purposes
+Use duck typing rather than explicit type checking
+Implement magic methods (str, repr, etc.) consistently
+Use abstract methods to enforce interface requirements
+
+4. Abstraction: Hide implementation details behind well-defined interfaces.
+
+Define clear public interfaces for your classes
+Separate interface from implementation
+Use docstrings to document the public API
+Follow the "tell, don't ask" principle
+
+# Naming Conventions
+
+Class names should use CapWords (PascalCase)
+Method and attribute names should use snake_case
+Constants should be in ALL_CAPS
+Use meaningful, descriptive names that reflect purpose rather than implementation
+Use consistent terminology throughout the codebase
+
+# Class Design Rules
+
+Classes should have a single responsibility (Single Responsibility Principle)
+Keep classes small and focused
+Favor immutability where appropriate
+Design for inheritance or prohibit it (make classes final if not meant to be extended)
+Make instance attributes explicit in init
+Initialize all attributes in the constructor
+Validate input parameters
+Use dataclasses for simple data containers
+Implement repr for debugging and str for readable string representation
+
+# Method Design
+
+Methods should do one thing and do it well
+Keep methods short (typically under 20 lines)
+Use method overloading via default parameters rather than multiple methods
+Return explicit values rather than modifying parameters in-place (unless appropriate)
+Avoid returning None unless it conveys meaning
+Implement classmethod and staticmethod appropriately
+Use descriptive verb phrases for method names that indicate action
+
+# Error Handling
+
+Use custom exceptions for domain-specific errors
+Catch only specific exceptions, not generic Exception
+Use context managers (with statements) for resource management
+Fail fast: validate early and raise exceptions promptly
+Use proper exception hierarchies
+Document exceptions in docstrings
+
+# Testing Considerations
+
+Design classes to be testable
+Use dependency injection to facilitate testing
+Keep side effects minimal and contained
+Write classes that are inherently unit-testable
+Implement equality methods (eq) for test assertions
+
+# Code Organization
+
+Follow the Pythonic principle of "Explicit is better than implicit"
+Group related classes in modules
+Organize modules into packages
+Use proper access modifiers (underscores) consistently
+Separate interface from implementation
+Put abstract base classes in their own module
+Separate business logic from infrastructure code
+
+# Documentation
+
+Document class purpose and usage with docstrings
+Document public methods with parameter and return types
+Document expected exceptions
+Use type hints consistently
+Include examples in docstrings for complex classes
+
+# Additional Best Practices
+
+Avoid circular dependencies between classes
+Minimize global state
+Follow the Law of Demeter (minimize knowledge of other classes)
+Make appropriate use of design patterns
+Prefer composition over inheritance for code reuse
+Use interfaces (abstract base classes) to define contracts
+Write cohesive classes where all methods use most of the class's attributes
+Follow the Open/Closed Principle: open for extension, closed for modification
+Implement Liskov Substitution Principle: subclasses should be substitutable for their base classes
+Use Dependency Inversion: depend on abstractions, not concrete implementations
+Follow Interface Segregation: many specific interfaces are better than one general-purpose interface
+
+These rules and best practices will help you create Python code that is maintainable, robust, and follows object-oriented principles effectively.
+

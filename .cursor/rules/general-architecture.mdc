@@ -1,0 +1,128 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# LangGraph Chatbot Architecture
+
+this rule outlines a comprehensive architecture for a Python chatbot built with LangGraph, focusing on the modular structure that enables flexible, state-based conversational flows.
+
+## Core Modules
+
+### 1. State Management Module
+**Purpose**: Maintains the conversation state and context throughout interactions.
+
+**Functionalities**:
+- Defines the state schema (messages, memory, user information, conversation history)
+- Handles state transitions between different nodes in the conversation graph
+- Provides access to current and historical states
+- Manages persistence of state across conversation sessions
+
+**Relations**: Serves as the foundation that all other modules interact with; provides context to the LLM Module and receives updates from the Processing Module.
+
+### 2. LLM Integration Module
+**Purpose**: Interfaces with large language models to generate responses.
+
+**Functionalities**:
+- Connects to LLM providers (OpenAI, Anthropic, local models)
+- Handles prompt construction and templating
+- Manages model parameters (temperature, max tokens)
+- Implements fallback mechanisms for model errors
+- Applies response formatting standards
+
+**Relations**: Receives state from State Management Module; passes generated content to Processing Module; may interact with Tool Integration for enhanced capabilities.
+
+### 3. Processing Module
+**Purpose**: Orchestrates the flow of conversation and applies transformations to messages.
+
+**Functionalities**:
+- Implements branching logic based on user intent
+- Applies filtering, moderation, and enhancement to generated responses
+- Routes the conversation to specialized handlers based on detected needs
+- Handles conversation flow transitions (greetings, main dialog, conclusions)
+
+**Relations**: Acts as the central coordinator between State Management, LLM Integration, and Tool Integration; updates state after processing.
+
+### 4. Tool Integration Module
+**Purpose**: Extends chatbot capabilities with external functionalities.
+
+**Functionalities**:
+- Provides framework for tool registration and discovery
+- Handles tool execution and result processing
+- Manages authentication for external services
+- Implements error handling for tool operations
+
+**Relations**: Receives requests from Processing Module; may provide context to LLM Module for response generation; updates state with tool results.
+
+### 5. Graph Definition Module
+**Purpose**: Defines the conversational flow using LangGraph's graph structure.
+
+**Functionalities**:
+- Creates nodes representing different states or functions
+- Defines edges and transitions between nodes
+- Implements conditional routing logic
+- Provides visualization capabilities for the graph
+
+**Relations**: Interacts with State Management to determine transitions; coordinates with Processing Module for executing node functions.
+
+## Supporting Modules
+
+### 6. Input Processing Module
+**Purpose**: Handles and normalizes user inputs.
+
+**Functionalities**:
+- Implements text preprocessing
+- Handles multimodal inputs (text, images, files)
+- Detects input language and applies translations if needed
+- Extracts entities and intents from user messages
+
+**Relations**: Provides processed input to State Management and Processing Module.
+
+### 7. Memory & Context Module
+**Purpose**: Manages longer-term memory and contextual understanding.
+
+**Functionalities**:
+- Implements retrieval-augmented generation capabilities
+- Manages vector storage for semantic search
+- Handles document chunking and embedding
+- Provides context windows management (sliding, summarized)
+
+**Relations**: Enhances State Management with long-term memory; provides context to LLM Integration for improved responses.
+
+### 8. Evaluation & Monitoring Module
+**Purpose**: Tracks and assesses chatbot performance.
+
+**Functionalities**:
+- Logs conversations and system operations
+- Calculates performance metrics (response time, user satisfaction)
+- Identifies failure modes and edge cases
+- Provides dashboards for monitoring
+
+**Relations**: Observes all other modules; may provide feedback to Processing Module for continuous improvement.
+
+### 9. Configuration Module
+**Purpose**: Manages system settings and environment integration.
+
+**Functionalities**:
+- Handles API keys and credentials
+- Provides environment-specific configurations
+- Manages feature flags and deployment options
+- Implements configuration validation
+
+**Relations**: Provides settings to all other modules; may be updated by Evaluation Module based on performance needs.
+
+## Integration Flow
+
+The architecture works through a cyclical flow:
+
+1. User input is received and normalized by the Input Processing Module
+2. The State Management Module updates with new input
+3. The Graph Definition Module determines the next node to execute
+4. The Processing Module orchestrates necessary operations
+5. If needed, Tool Integration Module executes external functions
+6. The LLM Integration Module generates appropriate responses
+7. The Memory & Context Module updates with new information
+8. The response is delivered to the user
+9. The Evaluation & Monitoring Module tracks the interaction quality
+
+This architecture provides a robust foundation for developing conversational AI applications with LangGraph, allowing for both simple chatbots and complex conversational agents with sophisticated tooling and memory capabilities.
