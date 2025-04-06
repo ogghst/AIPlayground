@@ -1,4 +1,4 @@
-# aidev_iteration1
+# AI Playground 
 
 This project is an exciting journey into the world of AI development! It's an exercise designed to sharpen our skills in translating user requirements into functional code using AI assistance, while simultaneously exploring the power of building sophisticated, stateful agents with LangGraph.
 
